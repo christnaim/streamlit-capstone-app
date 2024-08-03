@@ -103,8 +103,18 @@ def get_user_input():
 
     return user_input
 
+def main_prediction():
+    st.title('Prediction')
+
+    user_input = get_user_input()
+    input_df = pd.DataFrame([user_input])
+    if st.button('Predict'):
+        prediction = model_pipeline.predict(input_df)
+        rounded_prediction = round(prediction[0], 1)
+        st.write(f"Prediction: {rounded_prediction:.1f}")
+
 def main_optimization():
-    st.title('Optimization App using PSO')
+    st.title('Strength Maximization')
 
     if st.button('Run Optimization'):
         # Run PSO with progress bar and increased parameters
@@ -130,16 +140,6 @@ def main_optimization():
         st.write(f"\nTime taken for optimization: {end_time - start_time:.2f} seconds")
     else:
         st.write("Click the button to run the optimization")
-
-def main_prediction():
-    st.title('Prediction App')
-
-    user_input = get_user_input()
-    input_df = pd.DataFrame([user_input])
-    if st.button('Predict'):
-        prediction = model_pipeline.predict(input_df)
-        rounded_prediction = round(prediction[0], 1)
-        st.write(f"Prediction: {rounded_prediction:.1f}")
 
 # Define the cost per kg for each component
 component_costs = {
@@ -204,9 +204,9 @@ def monte_carlo_simulation(desired_strength, num_simulations=1000):
 
 # Main function to run Monte Carlo simulation for varying strengths and plot results
 def main_monte_carlo():
-    st.title('Monte Carlo Simulation for Cost Distribution')
+    st.title('Cost Minimization')
 
-    desired_strength_levels = np.arange(5, 85, 5)
+    desired_strength_levels = np.arange(10, 105, 10)
     num_simulations = st.slider("Number of Simulations", 1000, 10000, 5000)
 
     if st.button('Run Simulation'):
@@ -260,7 +260,7 @@ def main_monte_carlo():
 def main_monte_carlo_varying():
     st.title('Monte Carlo Simulation for Varying Strength Levels')
 
-    desired_strength_levels = np.arange(5, 85, 5)
+    desired_strength_levels = np.arange(10, 105, 10)
     num_simulations = st.slider("Number of Simulations", 1000, 10000, 5000)
 
     if st.button('Run Simulation'):
@@ -312,13 +312,18 @@ def main_monte_carlo_varying():
         st.plotly_chart(line_fig)
 
 # Page navigation
-page = st.sidebar.selectbox("Select a Page", ["Optimization", "Prediction", "Monte Carlo Simulation for Cost Distribution", "Monte Carlo Simulation for Varying Strength Levels"])
+page = st.sidebar.selectbox("Select a Page", [
+    "Prediction",
+    "Strength Maximization",
+    "Cost Minimization",
+    "Monte Carlo Simulation for Varying Strength Levels"
+])
 
-if page == "Optimization":
+if page == "Strength Maximization":
     main_optimization()
 elif page == "Prediction":
     main_prediction()
-elif page == "Monte Carlo Simulation for Cost Distribution":
+elif page == "Cost Minimization":
     main_monte_carlo()
 elif page == "Monte Carlo Simulation for Varying Strength Levels":
     main_monte_carlo_varying()
