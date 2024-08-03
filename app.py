@@ -153,7 +153,12 @@ component_costs = {
 
 # Define the cost function to minimize
 def cost_function(x):
-    return sum(x[i] * component_costs[numeric_features[i]] for i in range(len(numeric_features)))
+    try:
+        return sum(x[i] * component_costs[numeric_features[i]] for i in range(len(numeric_features)))
+    except KeyError as e:
+        logger.error("KeyError in cost_function: %s", e)
+        st.error(f"KeyError in cost_function: {e}")
+        st.stop()
 
 # Define the strength constraint function
 def strength_constraint(x, desired_strength):
@@ -184,7 +189,11 @@ def monte_carlo_simulation(desired_strength, num_simulations=1000):
 
     for _ in range(num_simulations):
         random_sample = [np.random.uniform(bound[0], bound[1]) for bound in bounds]
-        cost = cost_function(random_sample[:len(numeric_features)])  # Only pass numeric features to cost_function
+        try:
+            cost = cost_function(random_sample[:len(numeric_features)])  # Only pass numeric features to cost_function
+        except KeyError as e:
+            logger.error("KeyError in monte_carlo_simulation: %s", e)
+            continue
         strength = strength_constraint(random_sample, desired_strength)
         results.append((cost, strength))
 
