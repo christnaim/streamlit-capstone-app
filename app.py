@@ -6,6 +6,8 @@ from pyswarm import pso
 from tqdm import tqdm
 import time
 import logging
+import plotly.express as px
+import plotly.graph_objs as go
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -139,10 +141,93 @@ def main_prediction():
         rounded_prediction = round(prediction[0], 2)
         st.write(f"Prediction: {rounded_prediction:.2f}")
 
+# Define the cost per kg for each component
+component_costs = {
+    'Component_A': 0.072,
+    'Component_B': 0.036,
+    'Component_C': 0.024,
+    'Component_D': 0.012,
+    'Component_E': 0.36,
+    'Component_F': 0.018,
+    'Component_G': 0.03
+}
+
+# Define the cost function to minimize
+def cost_function(x):
+    return sum(x[i] * component_costs[numeric_features[i]] for i in range(len(numeric_features)))
+
+# Define the strength constraint function
+def strength_constraint(x, desired_strength):
+    input_data = dict(zip(numeric_features + factor_features, x[:-1]))
+    input_data['Factor_D'] = factor_d_values[int(round(x[-1]))]
+    input_df = pd.DataFrame([input_data])
+    predicted_strength = model_pipeline.predict(input_df)[0]
+    return predicted_strength
+
+# Function to run the Monte Carlo simulation
+def monte_carlo_simulation(desired_strength, num_simulations=1000):
+    # Define the bounds for the numeric features
+    bounds = [
+        (5, 600),  # Component_A
+        (0, 400),  # Component_B
+        (5, 300),  # Component_C
+        (150, 300),  # Component_D
+        (0, 50),  # Component_E
+        (700, 1400),  # Component_F
+        (500, 1000),  # Component_G
+        (10, 40),  # Factor_A
+        (30, 90),  # Factor_B
+        (1, 260),  # Factor_C
+        (0, 2)  # Factor_D (index for categorical values F1, F2, F3)
+    ]
+
+    results = []
+
+    for _ in range(num_simulations):
+        random_sample = [np.random.uniform(bound[0], bound[1]) for bound in bounds]
+        cost = cost_function(random_sample)
+        strength = strength_constraint(random_sample, desired_strength)
+        results.append((cost, strength))
+
+    return results
+
+# Main function to run Monte Carlo simulation for varying strengths and plot results
+def main_monte_carlo():
+    st.title('Monte Carlo Simulation for Cost Distribution')
+
+    desired_strength = st.slider("Select Desired Strength", 5, 100, 50)
+    num_simulations = st.slider("Number of Simulations", 1000, 10000, 5000)
+
+    if st.button('Run Simulation'):
+        results = monte_carlo_simulation(desired_strength, num_simulations)
+        costs, strengths = zip(*results)
+
+        # Filter results to only those that meet the desired strength
+        valid_costs = [cost for cost, strength in results if strength >= desired_strength]
+
+        if valid_costs:
+            df = pd.DataFrame({'Cost': valid_costs})
+            fig = px.histogram(df, x='Cost', nbins=50, title='Cost Distribution for Desired Strength')
+            fig.update_layout(
+                xaxis_title='Cost',
+                yaxis_title='Frequency',
+                showlegend=False
+            )
+            st.plotly_chart(fig)
+
+            st.write(f"Mean Cost: {np.mean(valid_costs):.2f}")
+            st.write(f"Median Cost: {np.median(valid_costs):.2f}")
+            st.write(f"Minimum Cost: {np.min(valid_costs):.2f}")
+            st.write(f"Maximum Cost: {np.max(valid_costs):.2f}")
+        else:
+            st.write(f"No valid results for desired strength: {desired_strength} MPa")
+
 # Sidebar for navigation
-page = st.sidebar.selectbox("Select a Page", ["Optimization", "Prediction"])
+page = st.sidebar.selectbox("Select a Page", ["Optimization", "Prediction", "Monte Carlo Simulation"])
 
 if page == "Optimization":
     main_optimization()
 elif page == "Prediction":
     main_prediction()
+elif page == "Monte Carlo Simulation":
+    main_monte_carlo()
