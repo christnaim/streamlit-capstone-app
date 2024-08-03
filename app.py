@@ -7,7 +7,6 @@ from tqdm import tqdm
 import time
 import logging
 import plotly.express as px
-import plotly.graph_objs as go
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -185,7 +184,7 @@ def monte_carlo_simulation(desired_strength, num_simulations=1000):
 
     for _ in range(num_simulations):
         random_sample = [np.random.uniform(bound[0], bound[1]) for bound in bounds]
-        cost = cost_function(random_sample)
+        cost = cost_function(random_sample[:len(numeric_features)])  # Only pass numeric features to cost_function
         strength = strength_constraint(random_sample, desired_strength)
         results.append((cost, strength))
 
@@ -220,9 +219,11 @@ def main_monte_carlo():
             st.write(f"Minimum Cost: {np.min(valid_costs):.2f}")
             st.write(f"Maximum Cost: {np.max(valid_costs):.2f}")
         else:
-            st.write(f"No valid results for desired strength: {desired_strength} MPa")
+            st.write(f"No valid results for desired strength: {desired_strength:.2f} MPa")
 
-# Sidebar for navigation
+# Main app
+st.set_page_config(page_title="Capstone Project App", page_icon=":rocket:")
+
 page = st.sidebar.selectbox("Select a Page", ["Optimization", "Prediction", "Monte Carlo Simulation"])
 
 if page == "Optimization":
