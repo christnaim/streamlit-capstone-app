@@ -37,16 +37,16 @@ all_features = numeric_features + factor_features
 factor_d_values = ['F1', 'F2', 'F3']
 
 feature_ranges = {
-    'Component_A': (5, 600),
-    'Component_B': (0, 400),
-    'Component_C': (5, 300),
-    'Component_D': (150, 300),
-    'Component_E': (0, 50),
-    'Component_F': (700, 1400),
-    'Component_G': (500, 1000),
-    'Factor_A': (10, 40),
-    'Factor_B': (30, 90),
-    'Factor_C': (1, 260)
+    'Component_A': (5.0, 600.0),
+    'Component_B': (0.0, 400.0),
+    'Component_C': (5.0, 300.0),
+    'Component_D': (150.0, 300.0),
+    'Component_E': (0.0, 50.0),
+    'Component_F': (700.0, 1400.0),
+    'Component_G': (500.0, 1000.0),
+    'Factor_A': (10.0, 40.0),
+    'Factor_B': (30.0, 90.0),
+    'Factor_C': (1.0, 260.0)
 }
 
 # Define the bounds for the numeric features
@@ -92,13 +92,12 @@ def get_user_input():
     user_input = {}
     for feature in numeric_features + factor_features:
         min_val, max_val = feature_ranges[feature]
-        value = st.number_input(f"Enter the value for {feature} (min: {min_val}, max: {max_val}):", min_value=min_val, max_value=max_val, value=(min_val + max_val) / 2, format="%.2f")
+        value = st.number_input(f"Enter the value for {feature} (min: {min_val}, max: {max_val}):", value=(min_val + max_val) / 2, format="%.2f")
         user_input[feature] = value
 
-    for feature in factor_features:
-        if feature == 'Factor_D':
-            value = st.selectbox(f"Enter the value for {feature}:", factor_d_values)
-            user_input[feature] = value
+    if 'Factor_D' in factor_features:
+        value = st.selectbox(f"Enter the value for Factor_D:", factor_d_values)
+        user_input['Factor_D'] = value
 
     return user_input
 
@@ -218,8 +217,7 @@ def main_monte_carlo():
         valid_samples = [sample for cost, sample in valid_results]
 
         if valid_costs:
-            df = pd.DataFrame({'Cost': valid_costs})
-            fig = px.histogram(df, x='Cost', nbins=50, title='Cost Distribution for Desired Strength Level')
+            fig = px.histogram(valid_costs, nbins=50, title='Cost Distribution for Desired Strength Level')
             st.plotly_chart(fig)
 
             min_cost_index = np.argmin(valid_costs)
