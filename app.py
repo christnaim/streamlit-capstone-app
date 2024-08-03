@@ -207,51 +207,43 @@ def monte_carlo_simulation(desired_strength, num_simulations=1000):
 def main_monte_carlo():
     st.title('Cost Minimization')
 
-    desired_strength_levels = np.arange(10, 105, 10)
+    desired_strength = st.number_input("Enter the desired strength:", min_value=0.0, max_value=100.0, value=50.0, step=1.0)
     num_simulations = st.slider("Number of Simulations", 1000, 10000, 5000)
 
     if st.button('Run Simulation'):
-        all_results = []
-        min_costs = []
-        mean_costs = []
+        results, feature_samples = monte_carlo_simulation(desired_strength, num_simulations)
+        costs, strengths = zip(*results)
 
-        for desired_strength in desired_strength_levels:
-            results, feature_samples = monte_carlo_simulation(desired_strength, num_simulations)
-            costs, strengths = zip(*results)
+        # Filter results to only those that meet the desired strength
+        valid_results = [(cost, sample) for cost, strength, sample in zip(costs, strengths, feature_samples) if strength >= desired_strength]
+        if valid_results:
+            valid_costs = [round(cost, 1) for cost, sample in valid_results]
+            min_cost = min(valid_costs)
+            mean_cost = round(np.mean(valid_costs), 1)
 
-            # Filter results to only those that meet the desired strength
-            valid_results = [(cost, sample) for cost, strength, sample in zip(costs, strengths, feature_samples) if strength >= desired_strength]
-            if valid_results:
-                valid_costs = [round(cost, 1) for cost, sample in valid_results]
-                all_results.append((desired_strength, valid_costs))
-                min_costs.append(min(valid_costs))
-                mean_costs.append(round(np.mean(valid_costs), 1))
-            else:
-                min_costs.append(None)
-                mean_costs.append(None)
+            st.write(f"Desired Strength: {desired_strength:.1f} MPa")
+            st.write(f"Minimum Cost: {min_cost:.1f}")
+            st.write(f"Mean Cost: {mean_cost:.1f}")
 
-        # Plot the histogram
-        fig = go.Figure()
-        for desired_strength, valid_costs in all_results:
-            fig.add_trace(go.Histogram(x=valid_costs, name=f'Strength {desired_strength} MPa', opacity=0.5))
+            # Extracting the feature values corresponding to the minimum cost
+            min_cost_sample = min(valid_results, key=lambda x: x[0])[1]
+            st.write("Feature values for minimum cost:")
+            for feature, value in zip(all_features, min_cost_sample):
+                st.write(f"{feature}: {value:.1f}")
 
-        fig.update_layout(
-            barmode='overlay',
-            title='Cost Distribution for Varying Strength Levels',
-            xaxis_title='Cost (Currency)',
-            yaxis_title='Frequency',
-            legend_title='Desired Strength Levels',
-            showlegend=True
-        )
-        st.plotly_chart(fig)
+            # Plot the results
+            fig = px.histogram(valid_costs, nbins=50, title='Cost Distribution')
+            st.plotly_chart(fig)
+        else:
+            st.write(f"No valid results for desired strength: {desired_strength:.1f} MPa")
 
 def main_monte_carlo_varying():
     st.title('Monte Carlo Simulation for Varying Strength Levels')
 
-    desired_strength_levels = np.arange(10, 105, 10)
     num_simulations = st.slider("Number of Simulations", 1000, 10000, 5000)
 
     if st.button('Run Simulation'):
+        desired_strength_levels = np.arange(10, 105, 10)
         all_results = []
         min_costs = []
         mean_costs = []
