@@ -91,7 +91,7 @@ def get_user_input():
     user_input = {}
     for feature in numeric_features:
         min_val, max_val = feature_ranges[feature]
-        value = st.slider(f"Enter the value for {feature}:", min_val, max_val, (min_val + max_val) / 2)
+        value = st.slider(f"Enter the value for {feature}:", int(min_val), int(max_val), int((min_val + max_val) // 2))
         user_input[feature] = value
 
     for feature in categorical_features:
