@@ -4,4 +4,5 @@ numpy==1.23.0
 pandas==1.4.2
 pyswarm==0.6
 tqdm==4.64.0
-
+scikit-learn==1.1.1 
+xgboost==1.6.2       
