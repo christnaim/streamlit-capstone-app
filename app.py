@@ -206,90 +206,65 @@ def monte_carlo_simulation(desired_strength, num_simulations=1000):
 def main_monte_carlo():
     st.title('Monte Carlo Simulation for Cost Distribution')
 
-    desired_strength = st.slider("Select Desired Strength", 5, 100, 50)
+    desired_strength_levels = np.arange(10, 85, 5)
     num_simulations = st.slider("Number of Simulations", 1000, 10000, 5000)
 
     if st.button('Run Simulation'):
-        results, feature_samples = monte_carlo_simulation(desired_strength, num_simulations)
-        costs, strengths = zip(*results)
-
-        # Filter results to only those that meet the desired strength
-        valid_results = [(cost, sample) for cost, strength, sample in zip(costs, strengths, feature_samples) if strength >= desired_strength]
-        valid_costs = [cost for cost, _ in valid_results]
-        valid_samples = [sample for _, sample in valid_results]
-
-        if valid_costs:
-            fig = px.histogram(valid_costs, nbins=50, title='Cost Distribution for Desired Strength Level')
-            st.plotly_chart(fig)
-
-            min_cost_index = np.argmin(valid_costs)
-            min_cost_features = valid_samples[min_cost_index]
-
-            st.write(f"Desired Strength: {desired_strength:.2f} MPa")
-            st.write(f"Mean Cost: {np.mean(valid_costs):.1f}")
-            st.write(f"Median Cost: {np.median(valid_costs):.1f}")
-            st.write(f"Minimum Cost: {np.min(valid_costs):.1f}")
-            st.write(f"Maximum Cost: {np.max(valid_costs):.1f}")
-            st.write("Feature values for minimum cost:")
-            for feature, value in zip(numeric_features + factor_features + ['Factor_D'], min_cost_features):
-                st.write(f"{feature}: {value:.1f}")
-        else:
-            st.write(f"No valid results for desired strength: {desired_strength:.2f} MPa")
-
-# Function to run Monte Carlo simulation for varying strength levels and plot results
-def main_monte_carlo_varying_strength():
-    st.title('Monte Carlo Simulation for Varying Strength Levels')
-
-    num_simulations = st.slider("Number of Simulations", 1000, 10000, 5000)
-
-    if st.button('Run Simulation'):
-        desired_strength_levels = np.linspace(5, 100, 20)
-        all_costs = []
-        cost_data = []
+        all_results = []
+        min_costs = []
+        mean_costs = []
 
         for desired_strength in desired_strength_levels:
-            results, _ = monte_carlo_simulation(desired_strength, num_simulations)
+            results, feature_samples = monte_carlo_simulation(desired_strength, num_simulations)
             costs, strengths = zip(*results)
 
-            # Filter results to only those that meet the desired strength
-            valid_costs = [cost for cost, strength in results if strength >= desired_strength]
-            if valid_costs:
-                all_costs.append(valid_costs)
-                cost_data.append((desired_strength, valid_costs))
-                logger.info(f"Desired Strength: {desired_strength:.2f} MPa")
-                logger.info(f"Mean Cost: {np.mean(valid_costs):.2f}")
-                logger.info(f"Median Cost: {np.median(valid_costs):.2f}")
-                logger.info(f"Minimum Cost: {np.min(valid_costs):.2f}")
-                logger.info(f"Maximum Cost: {np.max(valid_costs):.2f}")
-                logger.info("")
+            valid_results = [(cost, sample) for cost, strength, sample in zip(costs, strengths, feature_samples) if strength >= desired_strength]
+            if valid_results:
+                valid_costs = [cost for cost, _ in valid_results]
+                all_results.append((desired_strength, valid_costs))
+                min_costs.append(min(valid_costs))
+                mean_costs.append(np.mean(valid_costs))
             else:
-                logger.info(f"No valid results for desired strength: {desired_strength:.2f} MPa")
+                min_costs.append(None)
+                mean_costs.append(None)
 
-        # Create a Plotly figure with interactive legend
+        # Plot the histogram
         fig = go.Figure()
-        for idx, (strength, costs) in enumerate(cost_data):
-            fig.add_trace(go.Histogram(x=costs, nbinsx=50, name=f'Strength {strength:.2f} MPa', opacity=0.5))
+        for desired_strength, valid_costs in all_results:
+            fig.add_trace(go.Histogram(x=valid_costs, name=f'Strength {desired_strength} MPa', opacity=0.5))
 
         fig.update_layout(
+            barmode='overlay',
             title='Cost Distribution for Varying Strength Levels',
-            xaxis_title='Cost',
+            xaxis_title='Cost (Currency)',
             yaxis_title='Frequency',
-            barmode='overlay'
+            legend_title='Desired Strength Levels',
+            showlegend=True
         )
-        fig.update_traces(marker_line_width=0.1)
-
         st.plotly_chart(fig)
 
-# Main app
-st.set_page_config(page_title="Capstone Project App", page_icon=":rocket:")
+        # Plot the line chart
+        line_fig = go.Figure()
+        line_fig.add_trace(go.Scatter(x=desired_strength_levels, y=min_costs, mode='lines+markers', name='Min Cost'))
+        line_fig.add_trace(go.Scatter(x=desired_strength_levels, y=mean_costs, mode='lines+markers', name='Mean Cost'))
 
-page = st.sidebar.selectbox("Select a Page", ["Optimization", "Prediction", "Monte Carlo Simulation", "Varying Strength Simulation"])
+        line_fig.update_layout(
+            title='Cost vs Desired Strength Level',
+            xaxis_title='Desired Strength (MPa)',
+            yaxis_title='Cost (Currency)',
+            legend_title='Cost Type'
+        )
+        st.plotly_chart(line_fig)
+
+# Run the Monte Carlo simulation and plot results
+plot_monte_carlo_results()
+
+# Page navigation
+page = st.sidebar.selectbox("Select a Page", ["Optimization", "Prediction", "Monte Carlo Simulation for Cost Distribution", "Monte Carlo Simulation for Varying Strength Levels"])
 
 if page == "Optimization":
     main_optimization()
 elif page == "Prediction":
     main_prediction()
-elif page == "Monte Carlo Simulation":
+elif page == "Monte Carlo Simulation for Cost Distribution":
     main_monte_carlo()
-elif page == "Varying Strength Simulation":
-    main_monte_carlo_varying_strength()
