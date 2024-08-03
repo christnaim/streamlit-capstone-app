@@ -32,8 +32,9 @@ numeric_features = [
     'Component_A', 'Component_B', 'Component_C', 'Component_D', 
     'Component_E', 'Component_F', 'Component_G'
 ]
-factor_features = ['Factor_A', 'Factor_B', 'Factor_C', 'Factor_D']
-all_features = numeric_features + factor_features
+factor_features = ['Factor_A', 'Factor_B', 'Factor_C']
+categorical_features = ['Factor_D']
+all_features = numeric_features + factor_features + categorical_features
 factor_d_values = ['F1', 'F2', 'F3']
 
 feature_ranges = {
@@ -92,12 +93,12 @@ def get_user_input():
     user_input = {}
     for feature in numeric_features + factor_features:
         min_val, max_val = feature_ranges[feature]
-        value = st.number_input(f"Enter the value for {feature} (min: {min_val}, max: {max_val}):", value=(min_val + max_val) / 2, format="%.2f")
+        value = st.number_input(f"Enter the value for {feature} (min: {min_val}, max: {max_val}):", min_value=min_val, max_value=max_val, value=(min_val + max_val) / 2, format="%.2f")
         user_input[feature] = value
 
-    if 'Factor_D' in factor_features:
-        value = st.selectbox(f"Enter the value for Factor_D:", factor_d_values)
-        user_input['Factor_D'] = value
+    for feature in categorical_features:
+        value = st.selectbox(f"Enter the value for {feature}:", factor_d_values)
+        user_input[feature] = value
 
     return user_input
 
@@ -213,8 +214,8 @@ def main_monte_carlo():
 
         # Filter results to only those that meet the desired strength
         valid_results = [(cost, sample) for cost, strength, sample in zip(costs, strengths, feature_samples) if strength >= desired_strength]
-        valid_costs = [cost for cost, sample in valid_results]
-        valid_samples = [sample for cost, sample in valid_results]
+        valid_costs = [cost for cost, _ in valid_results]
+        valid_samples = [sample for _, sample in valid_results]
 
         if valid_costs:
             fig = px.histogram(valid_costs, nbins=50, title='Cost Distribution for Desired Strength Level')
@@ -229,7 +230,7 @@ def main_monte_carlo():
             st.write(f"Minimum Cost: {np.min(valid_costs):.1f}")
             st.write(f"Maximum Cost: {np.max(valid_costs):.1f}")
             st.write("Feature values for minimum cost:")
-            for feature, value in zip(numeric_features + factor_features, min_cost_features):
+            for feature, value in zip(numeric_features + factor_features + ['Factor_D'], min_cost_features):
                 st.write(f"{feature}: {value:.1f}")
         else:
             st.write(f"No valid results for desired strength: {desired_strength:.2f} MPa")
