@@ -3,7 +3,6 @@ import joblib
 import numpy as np
 import pandas as pd
 from pyswarm import pso
-from tqdm import tqdm
 import time
 import logging
 import plotly.express as px
@@ -79,15 +78,17 @@ def objective_function(x):
     return -prediction[0]  # Negate because pso minimizes
 
 def pso_with_progress(func, lb, ub, swarmsize=50, maxiter=100):
-    progress_bar = tqdm(total=maxiter, desc="PSO Iterations")
+    progress_bar = st.progress(0)
 
     def wrapped_func(x):
         result = func(x)
-        progress_bar.update(1)
         return result
 
-    xopt, fopt = pso(wrapped_func, lb, ub, swarmsize=swarmsize, maxiter=maxiter)
-    progress_bar.close()
+    xopt, fopt = pso(wrapped_func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, f_ieqcons=None)
+    
+    for i in range(maxiter):
+        progress_bar.progress((i + 1) / maxiter)
+
     return xopt, fopt
 
 def get_user_input():
@@ -243,19 +244,6 @@ def main_monte_carlo():
             showlegend=True
         )
         st.plotly_chart(fig)
-
-        # Plot the line chart
-        line_fig = go.Figure()
-        line_fig.add_trace(go.Scatter(x=desired_strength_levels, y=min_costs, mode='lines+markers', name='Min Cost'))
-        line_fig.add_trace(go.Scatter(x=desired_strength_levels, y=mean_costs, mode='lines+markers', name='Mean Cost'))
-
-        line_fig.update_layout(
-            title='Cost vs Desired Strength Level',
-            xaxis_title='Desired Strength (MPa)',
-            yaxis_title='Cost (Currency)',
-            legend_title='Cost Type'
-        )
-        st.plotly_chart(line_fig)
 
 def main_monte_carlo_varying():
     st.title('Monte Carlo Simulation for Varying Strength Levels')
