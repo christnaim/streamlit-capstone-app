@@ -104,5 +104,3 @@ if st.button('Run Optimization'):
 else:
     st.write("Click the button to run the optimization")
 
-
-
