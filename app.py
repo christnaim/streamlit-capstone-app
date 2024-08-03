@@ -186,6 +186,7 @@ def monte_carlo_simulation(desired_strength, num_simulations=1000):
     ]
 
     results = []
+    feature_samples = []
 
     for _ in range(num_simulations):
         random_sample = [np.random.uniform(bound[0], bound[1]) for bound in bounds]
@@ -196,8 +197,9 @@ def monte_carlo_simulation(desired_strength, num_simulations=1000):
             continue
         strength = strength_constraint(random_sample, desired_strength)
         results.append((cost, strength))
+        feature_samples.append(random_sample)
 
-    return results
+    return results, feature_samples
 
 # Main function to run Monte Carlo simulation for varying strengths and plot results
 def main_monte_carlo():
@@ -207,26 +209,33 @@ def main_monte_carlo():
     num_simulations = st.slider("Number of Simulations", 1000, 10000, 5000)
 
     if st.button('Run Simulation'):
-        results = monte_carlo_simulation(desired_strength, num_simulations)
+        results, feature_samples = monte_carlo_simulation(desired_strength, num_simulations)
         costs, strengths = zip(*results)
 
         # Filter results to only those that meet the desired strength
-        valid_costs = [cost for cost, strength in results if strength >= desired_strength]
+        valid_results = [(cost, sample) for cost, strength, sample in zip(costs, strengths, feature_samples) if strength >= desired_strength]
+        valid_costs = [cost for cost, sample in valid_results]
+        valid_samples = [sample for cost, sample in valid_results]
 
         if valid_costs:
             df = pd.DataFrame({'Cost': valid_costs})
             fig = px.histogram(df, x='Cost', nbins=50, title='Cost Distribution for Desired Strength')
             fig.update_layout(
-                xaxis_title='Cost',
+                xaxis_title='Cost (Currency)',
                 yaxis_title='Frequency',
                 showlegend=False
             )
             st.plotly_chart(fig)
 
+            min_cost_index = np.argmin(valid_costs)
+            min_cost_features = valid_samples[min_cost_index]
+
+            st.write(f"Desired Strength: {desired_strength:.2f} MPa")
             st.write(f"Mean Cost: {np.mean(valid_costs):.2f}")
             st.write(f"Median Cost: {np.median(valid_costs):.2f}")
             st.write(f"Minimum Cost: {np.min(valid_costs):.2f}")
             st.write(f"Maximum Cost: {np.max(valid_costs):.2f}")
+            st.write(f"Feature values for minimum cost: {dict(zip(all_features, min_cost_features))}")
         else:
             st.write(f"No valid results for desired strength: {desired_strength:.2f} MPa")
 
