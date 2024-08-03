@@ -30,10 +30,10 @@ except Exception as e:
 # Define the input features and their ranges
 numeric_features = [
     'Component_A', 'Component_B', 'Component_C', 'Component_D', 
-    'Component_E', 'Component_F', 'Component_G', 'Factor_A', 
-    'Factor_B', 'Factor_C'
+    'Component_E', 'Component_F', 'Component_G'
 ]
-categorical_features = ['Factor_D']
+factor_features = ['Factor_A', 'Factor_B', 'Factor_C', 'Factor_D']
+all_features = numeric_features + factor_features
 factor_d_values = ['F1', 'F2', 'F3']
 
 feature_ranges = {
@@ -70,7 +70,7 @@ ub = [bound[1] for bound in bounds]
 
 def objective_function(x):
     x = np.round(x)  # Round to nearest integers
-    input_data = dict(zip(numeric_features, x[:-1]))
+    input_data = dict(zip(all_features, x[:-1]))
     input_data['Factor_D'] = factor_d_values[int(round(x[-1]))]
     input_df = pd.DataFrame([input_data])
     prediction = model_pipeline.predict(input_df)
@@ -90,7 +90,7 @@ def pso_with_progress(func, lb, ub, swarmsize=50, maxiter=100):
 
 def get_user_input():
     user_input = {}
-    for feature in numeric_features:
+    for feature in numeric_features + factor_features:
         min_val, max_val = feature_ranges[feature]
         value = st.slider(f"Enter the value for {feature}:", int(min_val), int(max_val), int((min_val + max_val) // 2))
         user_input[feature] = value
@@ -112,7 +112,7 @@ def main_optimization():
         end_time = time.time()
 
         # Extract optimal input values
-        optimal_input_dict = dict(zip(numeric_features, np.round(xopt[:-1])))
+        optimal_input_dict = dict(zip(all_features, np.round(xopt[:-1])))
         optimal_input_dict['Factor_D'] = factor_d_values[int(round(xopt[-1]))]
 
         # Display the results
@@ -241,3 +241,4 @@ elif page == "Prediction":
     main_prediction()
 elif page == "Monte Carlo Simulation":
     main_monte_carlo()
+
