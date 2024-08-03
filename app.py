@@ -92,10 +92,10 @@ def get_user_input():
     user_input = {}
     for feature in numeric_features + factor_features:
         min_val, max_val = feature_ranges[feature]
-        value = st.slider(f"Enter the value for {feature}:", int(min_val), int(max_val), int((min_val + max_val) // 2))
+        value = st.number_input(f"Enter the value for {feature} (min: {min_val}, max: {max_val}):", min_value=min_val, max_value=max_val, value=(min_val + max_val) / 2, format="%.2f")
         user_input[feature] = value
 
-    for feature in categorical_features:
+    for feature in factor_features:
         if feature == 'Factor_D':
             value = st.selectbox(f"Enter the value for {feature}:", factor_d_values)
             user_input[feature] = value
@@ -219,24 +219,19 @@ def main_monte_carlo():
 
         if valid_costs:
             df = pd.DataFrame({'Cost': valid_costs})
-            fig = px.histogram(df, x='Cost', nbins=50, title='Cost Distribution for Desired Strength')
-            fig.update_layout(
-                xaxis_title='Cost (Currency)',
-                yaxis_title='Frequency',
-                showlegend=False
-            )
+            fig = px.histogram(df, x='Cost', nbins=50, title='Cost Distribution for Desired Strength Level')
             st.plotly_chart(fig)
 
             min_cost_index = np.argmin(valid_costs)
             min_cost_features = valid_samples[min_cost_index]
 
             st.write(f"Desired Strength: {desired_strength:.2f} MPa")
-            st.write(f"Mean Cost: {np.mean(valid_costs):.2f}")
-            st.write(f"Median Cost: {np.median(valid_costs):.2f}")
-            st.write(f"Minimum Cost: {np.min(valid_costs):.2f}")
-            st.write(f"Maximum Cost: {np.max(valid_costs):.2f}")
+            st.write(f"Mean Cost: {np.mean(valid_costs):.1f}")
+            st.write(f"Median Cost: {np.median(valid_costs):.1f}")
+            st.write(f"Minimum Cost: {np.min(valid_costs):.1f}")
+            st.write(f"Maximum Cost: {np.max(valid_costs):.1f}")
             st.write("Feature values for minimum cost:")
-            for feature, value in zip(all_features, min_cost_features):
+            for feature, value in zip(numeric_features + factor_features, min_cost_features):
                 st.write(f"{feature}: {value:.1f}")
         else:
             st.write(f"No valid results for desired strength: {desired_strength:.2f} MPa")
@@ -252,6 +247,3 @@ elif page == "Prediction":
     main_prediction()
 elif page == "Monte Carlo Simulation":
     main_monte_carlo()
-
-
-
