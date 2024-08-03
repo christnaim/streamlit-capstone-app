@@ -5,13 +5,26 @@ import pandas as pd
 from pyswarm import pso
 from tqdm import tqdm
 import time
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Set a random seed for reproducibility
 np.random.seed(42)
 
 # Load the trained model pipeline
 pipeline_path = 'model_pipeline.pkl'  # Ensure this file is in your GitHub repository
-model_pipeline = joblib.load(pipeline_path)
+
+try:
+    logger.info("Loading model pipeline from %s", pipeline_path)
+    model_pipeline = joblib.load(pipeline_path)
+    logger.info("Model pipeline loaded successfully")
+except Exception as e:
+    logger.error("Error loading model pipeline: %s", e)
+    st.error(f"Error loading model pipeline: {e}")
+    st.stop()
 
 # Define the input features and their ranges
 numeric_features = [
@@ -90,3 +103,6 @@ if st.button('Run Optimization'):
     st.write(f"\nTime taken for optimization: {end_time - start_time:.2f} seconds")
 else:
     st.write("Click the button to run the optimization")
+
+
+
