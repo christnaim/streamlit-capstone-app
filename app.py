@@ -90,4 +90,3 @@ if st.button('Run Optimization'):
     st.write(f"\nTime taken for optimization: {end_time - start_time:.2f} seconds")
 else:
     st.write("Click the button to run the optimization")
-
