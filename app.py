@@ -48,6 +48,21 @@ feature_ranges = {
     'Factor_C': (1, 260)
 }
 
+# Define the bounds for the numeric features
+bounds = [
+    (5, 600),  # Component_A
+    (0, 400),  # Component_B
+    (5, 300),  # Component_C
+    (150, 300),  # Component_D
+    (0, 50),  # Component_E
+    (700, 1400),  # Component_F
+    (500, 1000),  # Component_G
+    (10, 40),  # Factor_A
+    (30, 90),  # Factor_B
+    (1, 260),  # Factor_C
+    (0, 2)  # Factor_D (index for categorical values F1, F2, F3)
+]
+
 def get_user_input():
     user_input = {}
     for feature in numeric_features:
