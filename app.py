@@ -63,6 +63,30 @@ bounds = [
     (0, 2)  # Factor_D (index for categorical values F1, F2, F3)
 ]
 
+# Define the bounds for PSO
+lb = [bound[0] for bound in bounds]
+ub = [bound[1] for bound in bounds]
+
+def objective_function(x):
+    x = np.round(x)  # Round to nearest integers
+    input_data = dict(zip(numeric_features, x[:-1]))
+    input_data['Factor_D'] = factor_d_values[int(round(x[-1]))]
+    input_df = pd.DataFrame([input_data])
+    prediction = model_pipeline.predict(input_df)
+    return -prediction[0]  # Negate because pso minimizes
+
+def pso_with_progress(func, lb, ub, swarmsize=50, maxiter=100):
+    progress_bar = tqdm(total=maxiter, desc="PSO Iterations")
+
+    def wrapped_func(x):
+        result = func(x)
+        progress_bar.update(1)
+        return result
+
+    xopt, fopt = pso(wrapped_func, lb, ub, swarmsize=swarmsize, maxiter=maxiter)
+    progress_bar.close()
+    return xopt, fopt
+
 def get_user_input():
     user_input = {}
     for feature in numeric_features:
@@ -122,28 +146,3 @@ if page == "Optimization":
     main_optimization()
 elif page == "Prediction":
     main_prediction()
-
-def objective_function(x):
-    x = np.round(x)  # Round to nearest integers
-    input_data = dict(zip(numeric_features, x[:-1]))
-    input_data['Factor_D'] = factor_d_values[int(round(x[-1]))]
-    input_df = pd.DataFrame([input_data])
-    prediction = model_pipeline.predict(input_df)
-    return -prediction[0]  # Negate because pso minimizes
-
-def pso_with_progress(func, lb, ub, swarmsize=50, maxiter=100):
-    progress_bar = tqdm(total=maxiter, desc="PSO Iterations")
-
-    def wrapped_func(x):
-        result = func(x)
-        progress_bar.update(1)
-        return result
-
-    xopt, fopt = pso(wrapped_func, lb, ub, swarmsize=swarmsize, maxiter=maxiter)
-    progress_bar.close()
-    return xopt, fopt
-
-# Define the bounds for PSO
-lb = [bound[0] for bound in bounds]
-ub = [bound[1] for bound in bounds]
-
