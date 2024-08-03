@@ -119,7 +119,7 @@ def main_optimization():
         st.write("Optimal Input Values:")
         for feature, value in optimal_input_dict.items():
             if feature in numeric_features:
-                st.write(f"{feature}: {value:.2f}")
+                st.write(f"{feature}: {value:.1f}")
             else:
                 st.write(f"{feature}: {value}")
 
@@ -137,8 +137,8 @@ def main_prediction():
     input_df = pd.DataFrame([user_input])
     if st.button('Predict'):
         prediction = model_pipeline.predict(input_df)
-        rounded_prediction = round(prediction[0], 2)
-        st.write(f"Prediction: {rounded_prediction:.2f}")
+        rounded_prediction = round(prediction[0], 1)
+        st.write(f"Prediction: {rounded_prediction:.1f}")
 
 # Define the cost per kg for each component
 component_costs = {
@@ -235,7 +235,9 @@ def main_monte_carlo():
             st.write(f"Median Cost: {np.median(valid_costs):.2f}")
             st.write(f"Minimum Cost: {np.min(valid_costs):.2f}")
             st.write(f"Maximum Cost: {np.max(valid_costs):.2f}")
-            st.write(f"Feature values for minimum cost: {dict(zip(all_features, min_cost_features))}")
+            st.write("Feature values for minimum cost:")
+            for feature, value in zip(all_features, min_cost_features):
+                st.write(f"{feature}: {value:.1f}")
         else:
             st.write(f"No valid results for desired strength: {desired_strength:.2f} MPa")
 
@@ -250,4 +252,6 @@ elif page == "Prediction":
     main_prediction()
 elif page == "Monte Carlo Simulation":
     main_monte_carlo()
+
+
 
