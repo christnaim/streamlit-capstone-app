@@ -1,9 +1,9 @@
 streamlit==1.12.0
-joblib==1.1.0
-numpy==1.23.0
-pandas==1.4.2
+joblib==1.4.2
+numpy==1.26.4
+pandas==2.1.4
 pyswarm==0.6
-tqdm==4.64.0
+tqdm==4.66.4
 scikit-learn==1.3.2
-xgboost==1.6.2
-Cython==0.29.30
+xgboost==2.1.0
+cython==3.0.10
