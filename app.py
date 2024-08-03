@@ -206,7 +206,7 @@ def monte_carlo_simulation(desired_strength, num_simulations=1000):
 def main_monte_carlo():
     st.title('Monte Carlo Simulation for Cost Distribution')
 
-    desired_strength_levels = np.arange(10, 85, 5)
+    desired_strength_levels = np.arange(5, 85, 5)
     num_simulations = st.slider("Number of Simulations", 1000, 10000, 5000)
 
     if st.button('Run Simulation'):
@@ -218,12 +218,13 @@ def main_monte_carlo():
             results, feature_samples = monte_carlo_simulation(desired_strength, num_simulations)
             costs, strengths = zip(*results)
 
+            # Filter results to only those that meet the desired strength
             valid_results = [(cost, sample) for cost, strength, sample in zip(costs, strengths, feature_samples) if strength >= desired_strength]
             if valid_results:
-                valid_costs = [cost for cost, _ in valid_results]
+                valid_costs = [round(cost, 1) for cost, sample in valid_results]
                 all_results.append((desired_strength, valid_costs))
                 min_costs.append(min(valid_costs))
-                mean_costs.append(np.mean(valid_costs))
+                mean_costs.append(round(np.mean(valid_costs), 1))
             else:
                 min_costs.append(None)
                 mean_costs.append(None)
@@ -256,8 +257,59 @@ def main_monte_carlo():
         )
         st.plotly_chart(line_fig)
 
-# Run the Monte Carlo simulation and plot results
-plot_monte_carlo_results()
+def main_monte_carlo_varying():
+    st.title('Monte Carlo Simulation for Varying Strength Levels')
+
+    desired_strength_levels = np.arange(5, 85, 5)
+    num_simulations = st.slider("Number of Simulations", 1000, 10000, 5000)
+
+    if st.button('Run Simulation'):
+        all_results = []
+        min_costs = []
+        mean_costs = []
+
+        for desired_strength in desired_strength_levels:
+            results, feature_samples = monte_carlo_simulation(desired_strength, num_simulations)
+            costs, strengths = zip(*results)
+
+            # Filter results to only those that meet the desired strength
+            valid_results = [(cost, sample) for cost, strength, sample in zip(costs, strengths, feature_samples) if strength >= desired_strength]
+            if valid_results:
+                valid_costs = [round(cost, 1) for cost, sample in valid_results]
+                all_results.append((desired_strength, valid_costs))
+                min_costs.append(min(valid_costs))
+                mean_costs.append(round(np.mean(valid_costs), 1))
+            else:
+                min_costs.append(None)
+                mean_costs.append(None)
+
+        # Plot the histogram
+        fig = go.Figure()
+        for desired_strength, valid_costs in all_results:
+            fig.add_trace(go.Histogram(x=valid_costs, name=f'Strength {desired_strength} MPa', opacity=0.5))
+
+        fig.update_layout(
+            barmode='overlay',
+            title='Cost Distribution for Varying Strength Levels',
+            xaxis_title='Cost (Currency)',
+            yaxis_title='Frequency',
+            legend_title='Desired Strength Levels',
+            showlegend=True
+        )
+        st.plotly_chart(fig)
+
+        # Plot the line chart
+        line_fig = go.Figure()
+        line_fig.add_trace(go.Scatter(x=desired_strength_levels, y=min_costs, mode='lines+markers', name='Min Cost'))
+        line_fig.add_trace(go.Scatter(x=desired_strength_levels, y=mean_costs, mode='lines+markers', name='Mean Cost'))
+
+        line_fig.update_layout(
+            title='Cost vs Desired Strength Level',
+            xaxis_title='Desired Strength (MPa)',
+            yaxis_title='Cost (Currency)',
+            legend_title='Cost Type'
+        )
+        st.plotly_chart(line_fig)
 
 # Page navigation
 page = st.sidebar.selectbox("Select a Page", ["Optimization", "Prediction", "Monte Carlo Simulation for Cost Distribution", "Monte Carlo Simulation for Varying Strength Levels"])
@@ -268,3 +320,5 @@ elif page == "Prediction":
     main_prediction()
 elif page == "Monte Carlo Simulation for Cost Distribution":
     main_monte_carlo()
+elif page == "Monte Carlo Simulation for Varying Strength Levels":
+    main_monte_carlo_varying()
