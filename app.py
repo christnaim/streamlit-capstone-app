@@ -38,30 +38,30 @@ all_features = numeric_features + factor_features + categorical_features
 factor_d_values = ['F1', 'F2', 'F3']
 
 feature_ranges = {
-    'Component_A': (5.0, 600.0),
+    'Component_A': (100.0, 550.0),
     'Component_B': (0.0, 400.0),
-    'Component_C': (5.0, 300.0),
-    'Component_D': (150.0, 300.0),
-    'Component_E': (0.0, 50.0),
-    'Component_F': (700.0, 1400.0),
-    'Component_G': (500.0, 1000.0),
-    'Factor_A': (10.0, 40.0),
-    'Factor_B': (30.0, 90.0),
-    'Factor_C': (1.0, 260.0)
+    'Component_C': (0.0, 200.0),
+    'Component_D': (120.0, 250.0),
+    'Component_E': (0.0, 35.0),
+    'Component_F': (800.0, 1200.0),
+    'Component_G': (580.0, 1000.0),
+    'Factor_A': (0.0, 70.0),
+    'Factor_B': (0.0, 130.0),
+    'Factor_C': (1.0, 365.0)
 }
 
 # Define the bounds for the numeric features
 bounds = [
-    (5, 600),  # Component_A
+    (100, 550),  # Component_A
     (0, 400),  # Component_B
-    (5, 300),  # Component_C
-    (150, 300),  # Component_D
-    (0, 50),  # Component_E
-    (700, 1400),  # Component_F
-    (500, 1000),  # Component_G
-    (10, 40),  # Factor_A
-    (30, 90),  # Factor_B
-    (1, 260),  # Factor_C
+    (0, 200),  # Component_C
+    (120, 250),  # Component_D
+    (0, 35),  # Component_E
+    (800, 1200),  # Component_F
+    (580, 1000),  # Component_G
+    (0, 70),  # Factor_A
+    (0, 130),  # Factor_B
+    (1, 365),  # Factor_C
     (0, 2)  # Factor_D (index for categorical values F1, F2, F3)
 ]
 
@@ -172,21 +172,6 @@ def strength_constraint(x, desired_strength):
 
 # Function to run the Monte Carlo simulation
 def monte_carlo_simulation(desired_strength, num_simulations=1000):
-    # Define the bounds for the numeric features
-    bounds = [
-        (5, 600),  # Component_A
-        (0, 400),  # Component_B
-        (5, 300),  # Component_C
-        (150, 300),  # Component_D
-        (0, 50),  # Component_E
-        (700, 1400),  # Component_F
-        (500, 1000),  # Component_G
-        (10, 40),  # Factor_A
-        (30, 90),  # Factor_B
-        (1, 260),  # Factor_C
-        (0, 2)  # Factor_D (index for categorical values F1, F2, F3)
-    ]
-
     results = []
     feature_samples = []
 
@@ -307,3 +292,8 @@ elif page == "Cost Minimization":
     main_monte_carlo()
 elif page == "Monte Carlo Simulation for Varying Strength Levels":
     main_monte_carlo_varying()
+
+
+
+
+
