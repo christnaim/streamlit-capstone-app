@@ -292,8 +292,3 @@ elif page == "Cost Minimization":
     main_monte_carlo()
 elif page == "Monte Carlo Simulation for Varying Strength Levels":
     main_monte_carlo_varying()
-
-
-
-
-
