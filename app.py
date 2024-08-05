@@ -13,8 +13,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Set a random seed for reproducibility
-RANDOM_SEED = 42
-np.random.seed(RANDOM_SEED)
+np.random.seed(42)
 
 # Load the trained model pipeline
 pipeline_path = 'model_pipeline.pkl'  # Ensure this file is in your GitHub repository
@@ -69,31 +68,31 @@ bounds = [
 lb = [bound[0] for bound in bounds]
 ub = [bound[1] for bound in bounds]
 
-def objective_function(x, factor_d_value):
+def objective_function(x):
     x = np.round(x)  # Round to nearest integers
-    input_data = dict(zip(all_features[:-1], x))
-    input_data['Factor_D'] = factor_d_value
-    input_df = pd.DataFrame([input_data])
-    prediction = model_pipeline.predict(input_df)
-    return -prediction[0]  # Negate because pso minimizes
+    input_data = dict(zip(numeric_features + factor_features, x))
+    max_prediction = float('-inf')
+    for value in factor_d_values:
+        input_data['Factor_D'] = value
+        input_df = pd.DataFrame([input_data])
+        prediction = model_pipeline.predict(input_df)
+        if prediction[0] > max_prediction:
+            max_prediction = prediction[0]
+    return -max_prediction  # Negate because pso minimizes
 
-def pso_with_improvements(func, lb, ub, factor_d_value, swarmsize=50, maxiter=200, omega=0.7, phip=0.8, phig=0.8, random_restart_prob=0.1):
+def pso_with_progress(func, lb, ub, swarmsize=50, maxiter=100):
     progress_bar = st.progress(0)
-    best_solution = None
-    best_value = float('inf')
-    
-    for _ in range(3):  # 3 random restarts
-        np.random.seed(RANDOM_SEED)  # Reset the seed for each restart
-        xopt, fopt = pso(func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, omega=omega, phip=phip, phig=phig, args=(factor_d_value,))
-        
-        if fopt < best_value:
-            best_solution = xopt
-            best_value = fopt
 
-        for i in range(maxiter):
-            progress_bar.progress((i + 1) / maxiter)
+    def wrapped_func(x):
+        result = func(x)
+        return result
+
+    xopt, fopt = pso(wrapped_func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, f_ieqcons=None)
     
-    return best_solution, best_value
+    for i in range(maxiter):
+        progress_bar.progress((i + 1) / maxiter)
+
+    return xopt, fopt
 
 def get_user_input():
     user_input = {}
@@ -122,23 +121,24 @@ def main_optimization():
     st.title('Strength Maximization')
 
     if st.button('Run Optimization'):
-        best_overall_solution = None
-        best_overall_value = float('inf')
+        # Run PSO with progress bar and increased parameters
+        start_time = time.time()
+        xopt, fopt = pso_with_progress(objective_function, lb, ub, swarmsize=50, maxiter=100)
+        end_time = time.time()
 
-        for factor_d_value in factor_d_values:
-            start_time = time.time()
-            xopt, fopt = pso_with_improvements(objective_function, lb, ub, factor_d_value, swarmsize=50, maxiter=200)
-            end_time = time.time()
-
-            # Check if this is the best overall solution
-            if fopt < best_overall_value:
-                best_overall_solution = xopt
-                best_overall_value = fopt
-                best_factor_d_value = factor_d_value
-        
         # Extract optimal input values
-        optimal_input_dict = dict(zip(all_features[:-1], np.round(best_overall_solution)))
-        optimal_input_dict['Factor_D'] = best_factor_d_value
+        optimal_input_dict = dict(zip(numeric_features + factor_features, np.round(xopt)))
+        max_prediction = float('-inf')
+        best_factor_d = None
+        for value in factor_d_values:
+            optimal_input_dict['Factor_D'] = value
+            input_df = pd.DataFrame([optimal_input_dict])
+            prediction = model_pipeline.predict(input_df)
+            if prediction[0] > max_prediction:
+                max_prediction = prediction[0]
+                best_factor_d = value
+
+        optimal_input_dict['Factor_D'] = best_factor_d
 
         # Display the results
         st.write("Optimal Input Values:")
@@ -148,7 +148,9 @@ def main_optimization():
             else:
                 st.write(f"{feature}: {value}")
 
-        st.write(f"\nMaximized Prediction: {-best_overall_value:.2f}")
+        st.write(f"\nMaximized Prediction: {max_prediction:.2f}")
+
+        # Print time taken
         st.write(f"\nTime taken for optimization: {end_time - start_time:.2f} seconds")
     else:
         st.write("Click the button to run the optimization")
@@ -175,18 +177,20 @@ def cost_function(x):
 
 # Define the strength constraint function
 def strength_constraint(x, desired_strength):
-    input_data = dict(zip(numeric_features + factor_features, x[:-1]))
-    input_data['Factor_D'] = factor_d_values[int(round(x[-1]))]
-    input_df = pd.DataFrame([input_data])
-    predicted_strength = model_pipeline.predict(input_df)[0]
-    return predicted_strength
+    input_data = dict(zip(numeric_features + factor_features, x))
+    max_prediction = float('-inf')
+    for value in factor_d_values:
+        input_data['Factor_D'] = value
+        input_df = pd.DataFrame([input_data])
+        prediction = model_pipeline.predict(input_df)
+        if prediction[0] > max_prediction:
+            max_prediction = prediction[0]
+    return max_prediction
 
 # Function to run the Monte Carlo simulation
 def monte_carlo_simulation(desired_strength, num_simulations=1000):
     results = []
     feature_samples = []
-
-    np.random.seed(RANDOM_SEED)  # Reset the seed for Monte Carlo simulation
 
     for _ in range(num_simulations):
         random_sample = [np.random.uniform(bound[0], bound[1]) for bound in bounds]
