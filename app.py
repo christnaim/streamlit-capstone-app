@@ -77,19 +77,26 @@ def objective_function(x):
     prediction = model_pipeline.predict(input_df)
     return -prediction[0]  # Negate because pso minimizes
 
-def pso_with_progress(func, lb, ub, swarmsize=50, maxiter=100):
+def pso_with_improvements(func, lb, ub, swarmsize=100, maxiter=200, omega=0.5, phip=0.5, phig=0.5, random_restart_prob=0.1):
     progress_bar = st.progress(0)
-
-    def wrapped_func(x):
-        result = func(x)
-        return result
-
-    xopt, fopt = pso(wrapped_func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, f_ieqcons=None)
+    best_solution = None
+    best_value = float('inf')
     
-    for i in range(maxiter):
-        progress_bar.progress((i + 1) / maxiter)
+    for _ in range(5):  # 5 random restarts
+        xopt, fopt = pso(func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, omega=omega, phip=phip, phig=phig)
+        
+        if fopt < best_value:
+            best_solution = xopt
+            best_value = fopt
 
-    return xopt, fopt
+        # Random restart
+        if np.random.rand() < random_restart_prob:
+            np.random.seed(int(time.time()))
+            
+        for i in range(maxiter):
+            progress_bar.progress((i + 1) / maxiter)
+    
+    return best_solution, best_value
 
 def get_user_input():
     user_input = {}
@@ -120,7 +127,7 @@ def main_optimization():
     if st.button('Run Optimization'):
         # Run PSO with progress bar and increased parameters
         start_time = time.time()
-        xopt, fopt = pso_with_progress(objective_function, lb, ub, swarmsize=50, maxiter=100)
+        xopt, fopt = pso_with_improvements(objective_function, lb, ub, swarmsize=100, maxiter=200)
         end_time = time.time()
 
         # Extract optimal input values
@@ -292,3 +299,4 @@ elif page == "Cost Minimization":
     main_monte_carlo()
 elif page == "Monte Carlo Simulation for Varying Strength Levels":
     main_monte_carlo_varying()
+
