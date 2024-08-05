@@ -77,12 +77,12 @@ def objective_function(x):
     prediction = model_pipeline.predict(input_df)
     return -prediction[0]  # Negate because pso minimizes
 
-def pso_with_improvements(func, lb, ub, swarmsize=100, maxiter=200, omega=0.5, phip=0.5, phig=0.5, random_restart_prob=0.1):
+def pso_with_improvements(func, lb, ub, swarmsize=20, maxiter=50, omega=0.5, phip=0.5, phig=0.5, random_restart_prob=0.1):
     progress_bar = st.progress(0)
     best_solution = None
     best_value = float('inf')
     
-    for _ in range(5):  # 5 random restarts
+    for _ in range(3):  # 3 random restarts
         xopt, fopt = pso(func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, omega=omega, phip=phip, phig=phig)
         
         if fopt < best_value:
@@ -127,7 +127,7 @@ def main_optimization():
     if st.button('Run Optimization'):
         # Run PSO with progress bar and increased parameters
         start_time = time.time()
-        xopt, fopt = pso_with_improvements(objective_function, lb, ub, swarmsize=100, maxiter=200)
+        xopt, fopt = pso_with_improvements(objective_function, lb, ub, swarmsize=20, maxiter=50)
         end_time = time.time()
 
         # Extract optimal input values
@@ -299,4 +299,3 @@ elif page == "Cost Minimization":
     main_monte_carlo()
 elif page == "Monte Carlo Simulation for Varying Strength Levels":
     main_monte_carlo_varying()
-
