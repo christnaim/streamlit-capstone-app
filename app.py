@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Set a random seed for reproducibility
+# Set a random seed for reproducibility in PSO
 seed = 42
 
 # Load the trained model pipeline
@@ -195,7 +195,7 @@ def monte_carlo_simulation(desired_strength, num_simulations=1000):
     feature_samples = []
 
     for _ in range(num_simulations):
-        rng = np.random.default_rng(seed)  # Ensure reproducibility before each sample
+        rng = np.random.default_rng()  # Do not set the seed here to ensure different results
         random_sample = [rng.uniform(bound[0], bound[1]) for bound in bounds]
         try:
             cost = cost_function(random_sample[:len(numeric_features)])  # Only pass numeric features to cost_function
