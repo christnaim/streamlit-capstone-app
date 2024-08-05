@@ -252,6 +252,7 @@ def main_monte_carlo_varying():
         all_results = []
         min_costs = []
         mean_costs = []
+        min_cost_samples = []
 
         for desired_strength in desired_strength_levels:
             results, feature_samples = monte_carlo_simulation(desired_strength, num_simulations)
@@ -261,12 +262,24 @@ def main_monte_carlo_varying():
             valid_results = [(cost, sample) for cost, strength, sample in zip(costs, strengths, feature_samples) if strength >= desired_strength]
             if valid_results:
                 valid_costs = [round(cost, 1) for cost, sample in valid_results]
-                all_results.append((desired_strength, valid_costs))
-                min_costs.append(min(valid_costs))
+                if min_costs and min_costs[-1] is not None:
+                    min_cost = max(min(valid_costs), min_costs[-1])  # Ensure non-decreasing min costs
+                else:
+                    min_cost = min(valid_costs)
+                min_costs.append(min_cost)
                 mean_costs.append(round(np.mean(valid_costs), 1))
+                min_cost_sample = min(valid_results, key=lambda x: x[0])[1]
             else:
-                min_costs.append(None)
+                if min_costs:
+                    min_cost = min_costs[-1]
+                else:
+                    min_cost = None
+                min_costs.append(min_cost)
                 mean_costs.append(None)
+                min_cost_sample = None
+
+            min_cost_samples.append(min_cost_sample)
+            all_results.append((desired_strength, valid_costs))
 
         # Plot the histogram
         fig = go.Figure()
@@ -295,6 +308,19 @@ def main_monte_carlo_varying():
             legend_title='Cost Type'
         )
         st.plotly_chart(line_fig)
+
+        # Display the table of minimum costs and corresponding feature values
+        st.write("Minimum Costs and Corresponding Feature Values for Each Strength Level:")
+        table_data = []
+        for strength, min_cost, min_cost_sample in zip(desired_strength_levels, min_costs, min_cost_samples):
+            if min_cost_sample:
+                feature_values = {feature: round(value, 1) for feature, value in zip(all_features, min_cost_sample)}
+            else:
+                feature_values = {feature: None for feature in all_features}
+            table_data.append({'Strength Level (MPa)': strength, 'Minimum Cost ($)': min_cost, 'Mean Cost ($)': mean_costs[desired_strength_levels.tolist().index(strength)], **feature_values})
+        
+        table_df = pd.DataFrame(table_data)
+        st.dataframe(table_df)
 
 # Page navigation
 page = st.sidebar.selectbox("Select a Page", [
