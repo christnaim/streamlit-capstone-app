@@ -88,7 +88,8 @@ def pso_with_progress(func, lb, ub, swarmsize=50, maxiter=100):
         result = func(x)
         return result
 
-    xopt, fopt = pso(wrapped_func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, f_ieqcons=None, minfunc=1e-8, minstep=1e-8, debug=False, seed=seed)
+    np.random.seed(seed)  # Ensure reproducibility
+    xopt, fopt = pso(wrapped_func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, f_ieqcons=None, minfunc=1e-8, minstep=1e-8, debug=False)
     
     for i in range(maxiter):
         progress_bar.progress((i + 1) / maxiter)
@@ -194,6 +195,7 @@ def monte_carlo_simulation(desired_strength, num_simulations=1000):
     feature_samples = []
 
     for _ in range(num_simulations):
+        np.random.seed(seed)  # Ensure reproducibility
         random_sample = [np.random.uniform(bound[0], bound[1]) for bound in bounds]
         try:
             cost = cost_function(random_sample[:len(numeric_features)])  # Only pass numeric features to cost_function
