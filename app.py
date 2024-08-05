@@ -13,7 +13,8 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Set a random seed for reproducibility
-np.random.seed(42)
+seed = 42
+np.random.seed(seed)
 
 # Load the trained model pipeline
 pipeline_path = 'model_pipeline.pkl'  # Ensure this file is in your GitHub repository
@@ -87,7 +88,7 @@ def pso_with_progress(func, lb, ub, swarmsize=50, maxiter=100):
         result = func(x)
         return result
 
-    xopt, fopt = pso(wrapped_func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, f_ieqcons=None)
+    xopt, fopt = pso(wrapped_func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, f_ieqcons=None, minfunc=1e-8, minstep=1e-8, debug=False, seed=seed)
     
     for i in range(maxiter):
         progress_bar.progress((i + 1) / maxiter)
