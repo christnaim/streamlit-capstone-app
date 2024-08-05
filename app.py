@@ -128,7 +128,6 @@ def main_optimization():
         best_overall_value = float('inf')
 
         for factor_d_value in factor_d_values:
-            st.write(f"Running optimization for Factor_D = {factor_d_value}")
             start_time = time.time()
             xopt, fopt = pso_with_improvements(objective_function, lb, ub, factor_d_value, swarmsize=20, maxiter=50)
             end_time = time.time()
@@ -138,23 +137,21 @@ def main_optimization():
                 best_overall_solution = xopt
                 best_overall_value = fopt
                 best_factor_d_value = factor_d_value
-
-            st.write(f"Factor_D = {factor_d_value}, Optimized value: {-fopt:.2f}")
-            st.write(f"Time taken for this optimization: {end_time - start_time:.2f} seconds")
         
         # Extract optimal input values
         optimal_input_dict = dict(zip(all_features[:-1], np.round(best_overall_solution)))
         optimal_input_dict['Factor_D'] = best_factor_d_value
 
         # Display the results
-        st.write("Best Overall Input Values:")
+        st.write("Optimal Input Values:")
         for feature, value in optimal_input_dict.items():
             if feature in numeric_features:
                 st.write(f"{feature}: {value:.1f}")
             else:
                 st.write(f"{feature}: {value}")
 
-        st.write(f"\nBest Overall Maximized Prediction: {-best_overall_value:.2f}")
+        st.write(f"\nMaximized Prediction: {-best_overall_value:.2f}")
+        st.write(f"\nTime taken for optimization: {end_time - start_time:.2f} seconds")
     else:
         st.write("Click the button to run the optimization")
 
