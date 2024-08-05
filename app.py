@@ -62,28 +62,27 @@ bounds = [
     (0, 70),  # Factor_A
     (0, 130),  # Factor_B
     (1, 365),  # Factor_C
-    (0, 2)  # Factor_D (index for categorical values F1, F2, F3)
 ]
 
 # Define the bounds for PSO
 lb = [bound[0] for bound in bounds]
 ub = [bound[1] for bound in bounds]
 
-def objective_function(x):
+def objective_function(x, factor_d_value):
     x = np.round(x)  # Round to nearest integers
-    input_data = dict(zip(all_features, x[:-1]))
-    input_data['Factor_D'] = factor_d_values[int(round(x[-1]))]
+    input_data = dict(zip(all_features[:-1], x))
+    input_data['Factor_D'] = factor_d_value
     input_df = pd.DataFrame([input_data])
     prediction = model_pipeline.predict(input_df)
     return -prediction[0]  # Negate because pso minimizes
 
-def pso_with_improvements(func, lb, ub, swarmsize=20, maxiter=50, omega=0.5, phip=0.5, phig=0.5, random_restart_prob=0.1):
+def pso_with_improvements(func, lb, ub, factor_d_value, swarmsize=20, maxiter=50, omega=0.5, phip=0.5, phig=0.5, random_restart_prob=0.1):
     progress_bar = st.progress(0)
     best_solution = None
     best_value = float('inf')
     
     for _ in range(3):  # 3 random restarts
-        xopt, fopt = pso(func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, omega=omega, phip=phip, phig=phig)
+        xopt, fopt = pso(func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, omega=omega, phip=phip, phig=phig, args=(factor_d_value,))
         
         if fopt < best_value:
             best_solution = xopt
@@ -125,27 +124,37 @@ def main_optimization():
     st.title('Strength Maximization')
 
     if st.button('Run Optimization'):
-        # Run PSO with progress bar and increased parameters
-        start_time = time.time()
-        xopt, fopt = pso_with_improvements(objective_function, lb, ub, swarmsize=20, maxiter=50)
-        end_time = time.time()
+        best_overall_solution = None
+        best_overall_value = float('inf')
 
+        for factor_d_value in factor_d_values:
+            st.write(f"Running optimization for Factor_D = {factor_d_value}")
+            start_time = time.time()
+            xopt, fopt = pso_with_improvements(objective_function, lb, ub, factor_d_value, swarmsize=20, maxiter=50)
+            end_time = time.time()
+
+            # Check if this is the best overall solution
+            if fopt < best_overall_value:
+                best_overall_solution = xopt
+                best_overall_value = fopt
+                best_factor_d_value = factor_d_value
+
+            st.write(f"Factor_D = {factor_d_value}, Optimized value: {-fopt:.2f}")
+            st.write(f"Time taken for this optimization: {end_time - start_time:.2f} seconds")
+        
         # Extract optimal input values
-        optimal_input_dict = dict(zip(all_features, np.round(xopt[:-1])))
-        optimal_input_dict['Factor_D'] = factor_d_values[int(round(xopt[-1]))]
+        optimal_input_dict = dict(zip(all_features[:-1], np.round(best_overall_solution)))
+        optimal_input_dict['Factor_D'] = best_factor_d_value
 
         # Display the results
-        st.write("Optimal Input Values:")
+        st.write("Best Overall Input Values:")
         for feature, value in optimal_input_dict.items():
             if feature in numeric_features:
                 st.write(f"{feature}: {value:.1f}")
             else:
                 st.write(f"{feature}: {value}")
 
-        st.write(f"\nMaximized Prediction: {-fopt:.2f}")
-
-        # Print time taken
-        st.write(f"\nTime taken for optimization: {end_time - start_time:.2f} seconds")
+        st.write(f"\nBest Overall Maximized Prediction: {-best_overall_value:.2f}")
     else:
         st.write("Click the button to run the optimization")
 
