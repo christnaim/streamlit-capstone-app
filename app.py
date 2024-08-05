@@ -13,7 +13,8 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Set a random seed for reproducibility
-np.random.seed(42)
+RANDOM_SEED = 42
+np.random.seed(RANDOM_SEED)
 
 # Load the trained model pipeline
 pipeline_path = 'model_pipeline.pkl'  # Ensure this file is in your GitHub repository
@@ -80,18 +81,15 @@ def pso_with_improvements(func, lb, ub, factor_d_value, swarmsize=20, maxiter=50
     progress_bar = st.progress(0)
     best_solution = None
     best_value = float('inf')
-    
+
     for _ in range(3):  # 3 random restarts
+        np.random.seed(RANDOM_SEED)  # Reset the seed for each restart
         xopt, fopt = pso(func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, omega=omega, phip=phip, phig=phig, args=(factor_d_value,))
         
         if fopt < best_value:
             best_solution = xopt
             best_value = fopt
 
-        # Random restart
-        if np.random.rand() < random_restart_prob:
-            np.random.seed(int(time.time()))
-            
         for i in range(maxiter):
             progress_bar.progress((i + 1) / maxiter)
     
@@ -187,6 +185,8 @@ def strength_constraint(x, desired_strength):
 def monte_carlo_simulation(desired_strength, num_simulations=1000):
     results = []
     feature_samples = []
+
+    np.random.seed(RANDOM_SEED)  # Reset the seed for Monte Carlo simulation
 
     for _ in range(num_simulations):
         random_sample = [np.random.uniform(bound[0], bound[1]) for bound in bounds]
