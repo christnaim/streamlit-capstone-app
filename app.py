@@ -77,11 +77,11 @@ def objective_function(x, factor_d_value):
     prediction = model_pipeline.predict(input_df)
     return -prediction[0]  # Negate because pso minimizes
 
-def pso_with_improvements(func, lb, ub, factor_d_value, swarmsize=20, maxiter=50, omega=0.5, phip=0.5, phig=0.5, random_restart_prob=0.1):
+def pso_with_improvements(func, lb, ub, factor_d_value, swarmsize=50, maxiter=200, omega=0.7, phip=0.8, phig=0.8, random_restart_prob=0.1):
     progress_bar = st.progress(0)
     best_solution = None
     best_value = float('inf')
-
+    
     for _ in range(3):  # 3 random restarts
         np.random.seed(RANDOM_SEED)  # Reset the seed for each restart
         xopt, fopt = pso(func, lb, ub, swarmsize=swarmsize, maxiter=maxiter, omega=omega, phip=phip, phig=phig, args=(factor_d_value,))
@@ -127,7 +127,7 @@ def main_optimization():
 
         for factor_d_value in factor_d_values:
             start_time = time.time()
-            xopt, fopt = pso_with_improvements(objective_function, lb, ub, factor_d_value, swarmsize=20, maxiter=50)
+            xopt, fopt = pso_with_improvements(objective_function, lb, ub, factor_d_value, swarmsize=50, maxiter=200)
             end_time = time.time()
 
             # Check if this is the best overall solution
