@@ -7,6 +7,7 @@ import time
 import logging
 import plotly.express as px
 import plotly.graph_objects as go
+from pyswarm import pso
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
