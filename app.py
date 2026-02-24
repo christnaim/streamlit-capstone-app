@@ -9,7 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # Set up logging
-logging.basicConfig(level=logginag.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Set a random seed for reproducibility in PSO
