@@ -1,10 +1,9 @@
-streamlit==1.12.0
+streamlit==1.35.0
 joblib==1.4.2
 numpy==1.26.4
 pandas==2.1.4
 pyswarm==0.6
-tqdm==4.66.4
 scikit-learn==1.3.2
 xgboost==2.1.0
 cython==3.0.10
-plotly==5.3.1
+plotly==5.22.0
